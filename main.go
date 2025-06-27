@@ -1,46 +1,35 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func getName() string {
-	name := "Ali Shaikh"
 
-	fmt.Println("Welcome to Ali's Casino...")
-	fmt.Printf("Enter your name: ")
-	_, err := fmt.Scanln(&name)
-	if err != nil {
-		return ""
-	}
-	fmt.Printf("Welcome %s lets play\n", name)
-	return name
-}
 
-func getBet(balance uint) uint {
-	var bet uint
 
-	for true {
-		fmt.Printf("Enter your bet, or 0 to quit (balance = $%d) ", balance)
-		fmt.Scan(&bet)
+func checkWin(spin [][]string, multipliers map[string]uint) []uint {
+	lines := []uint{}
 
-		if bet > balance {
-			fmt.Println("Bet cannot be larger than balance")
+	for _, row := range spin {
+		win := true
+		checkSymbol := row[0]
+		for _, symbol := range row[1:] {
+			if checkSymbol != symbol {
+				win = false
+				break
+			}
+		}
+		if win {
+			lines = append(lines, multipliers[checkSymbol])
 		} else {
-			break
+			lines = append(lines, 0)
 		}
 	}
-
-	return bet
+	return lines
 }
 
-func generateSymbolArray(symbols map[string]uint) []string {
-	symbolArr := []string{}
-	for symbol, count := range symbols {
-		for i := uint(0); i < count; i++ {
-			symbolArr = append(symbolArr, symbol)
-		}
-	}
-	return symbolArr
-}
+
+
 
 func main() {
 	symbols := map[string]uint{
@@ -49,28 +38,39 @@ func main() {
 		"C": 12,
 		"D": 20,
 	}
-	// multipliers := map[string]uint{
-	// 	"A": 20,
-	// 	"B": 10,
-	// 	"C": 5,
-	// 	"D": 2, 
-	// }
+	multipliers := map[string]uint{
+		"A": 20,
+		"B": 10,
+		"C": 5,
+		"D": 2, 
+	}
 
-	symbolArr := generateSymbolArray(symbols)
-	fmt.Println(symbolArr)
-
-
+	symbolArr := GenerateSymbolArray(symbols)
 
 	balance := uint(200)
-	getName()
+	GetName()
 
 	for balance > 0 {
-		bet := getBet(balance)
+		bet := GetBet(balance)
 		if bet == 0 {
 			break
 		}
-		balance -= bet	
+		balance -= bet
+
+		spin := GetSpin(symbolArr, 3, 3)
+		PrintSpin(spin)
+		// Check for win and update the balance according to the multipliers.
+		winningLines := checkWin(spin, multipliers)
+		for i, multi := range winningLines {
+			win := multi * bet
+			balance += win
+			if multi > 0 {
+				fmt.Printf("Won $%d, (%dx) on line #%d\n", win, multi, i+1)
+			}
+		}
 	}
+
+
 
 	fmt.Printf("You left with, $%d.\n", balance)
 	
